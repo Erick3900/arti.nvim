@@ -1,5 +1,5 @@
 local utils = require('arti.utils')
-local dialogs = require('arti.project.dialogs')
+local dialogs = require('arti.ws.dialogs')
 local previewers = require('telescope.previewers')
 
 local runner = {
@@ -50,7 +50,7 @@ function runner.show_jobs(config)
                 vim.api.nvim_buf_set_option(self.state.bufnr, "filetype", "json")
 
                 local v = vim.deepcopy(e.value)
-                v.ws = nil -- Remove Workspace before apply serialization
+                v.ws = nil
 
                 local serpent = require('arti.serpent')
 
@@ -153,7 +153,11 @@ function runner._run(config, ws, cmds, entry, on_exit, idx)
             if idx == #cmds and vim.is_callable(on_exit) then
                 on_exit(code)
             else
-                runner._run(config, ws, cmds, entry, on_exit, idx + 1)
+                if code == 0 then
+                    runner._run(config, ws, cmds, entry, on_exit, idx + 1)
+                else
+                    on_exit(code)
+                end
             end
 
             runner.jobs[id] = nil
@@ -181,7 +185,7 @@ function runner._run(config, ws, cmds, entry, on_exit, idx)
     local ok, err = pcall(start_job)
 
     if not ok then
-        vim.notify(err)
+        error(err)
 
         if vim.is_callable(on_exit) then
             on_exit(-1)
@@ -202,6 +206,13 @@ function runner._run_process(config, ws, cmds, options, on_exit)
 end
 
 function runner._run_lua(config, ws, task, on_exit)
+    local run_callable = task.callback
+
+    if type(run_callable) ~= 'function' then
+        error("Task must provide a callback")
+        return
+    end
+
     -- TODO
 end
 

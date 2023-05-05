@@ -1,8 +1,8 @@
 local path       = require('plenary.path')
 local utils      = require('arti.utils')
-local dialogs    = require('arti.project.dialogs')
+local runner     = require('arti.ws.runner')
+local dialogs    = require('arti.ws.dialogs')
 local previewers = require('telescope.previewers')
-local runner     = require('arti.project.runner')
 
 function show_entries(config, ws, entries, options, callback)
     dialogs.table(
@@ -198,6 +198,9 @@ return function(config, rootpath)
     function workspace:update_state(state)
         local state_path = path:new(self:ws_root(), config.impl.state)
         local serpent = require('arti.serpent')
+
+        state.empty_dict = vim._empty_dict_mt
+
         utils.write_file(state_path, serpent.pretty_dump(state))
     end
 
@@ -221,6 +224,23 @@ return function(config, rootpath)
                     error("Duplicate task '" .. task.name .. "'")
                 else
                     byname[task.name] = task
+                end
+            end
+        end
+
+        return byname
+    end
+
+    function workspace:get_launch_by_name(inlaunchs)
+        local launchs = vim.F.if_nil(inlaunchs, self:get_launch())
+        local byname = {}
+
+        for _, launch in ipairs(launchs) do
+            if launch.name then
+                if byname[launch.name] then
+                    error("Duplicate launch config '"..launch.name.."'")
+                else
+                    byname[launch.name] = launch
                 end
             end
         end
@@ -391,8 +411,16 @@ return function(config, rootpath)
 
         self:run_depends(depends, function(ok)
             if ok then
-                runner.run(config, self, entry, function()
+                runner.run(config, self, entry, function(code)
                     self.runningjobs[entry.name] = self.states.STOP
+
+                    if code ~= 0 then
+                        print("Task "..entry.name.." failed")
+                    end
+
+                    if vim.is_callabl(entry.on_exit) then
+                        entry.on_exit(code)
+                    end
                 end)
             else
                 self.runningjobs[entry.name] = self.states.STOP
@@ -414,8 +442,12 @@ return function(config, rootpath)
 
         self:run_depends(depends, function(ok)
             if ok then
-                runner.launch(config, self, entry, function()
+                runner.launch(config, self, entry, function(code)
                     self.runningjobs[entry.name] = self.states.STOP
+
+                    if vim.is_callable(entry.on_exit) then
+                        entry.on_exit(code)
+                    end
                 end)
             else
                 self.runningjobs[entry.name] = self.states.STOP

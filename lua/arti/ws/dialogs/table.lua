@@ -1,4 +1,4 @@
-local select = require('arti.project.dialogs.select')
+local select = require('arti.ws.dialogs.select')
 local entry_display = require('telescope.pickers.entry_display')
 
 local function table(items, options, callback)

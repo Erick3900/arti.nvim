@@ -13,11 +13,12 @@ return {
         workspace = "",
     },
     impl = {
-        workspace = ".arti" .. utils.dirsep .. "project",
+        workspace = ".arti" .. utils.dirsep .. "ws",
         variables = "variables.lua",
         tasks = "tasks.lua",
         launch = "launch.lua",
         config = "config.lua",
-        state = "state.lua"
+        state = "state.lua",
+        recents = "recents.lua"
     }
 }

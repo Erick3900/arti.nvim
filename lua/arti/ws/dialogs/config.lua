@@ -1,5 +1,5 @@
-local select = require('arti.project.dialogs.select')
-local table_d = require('arti.project.dialogs.table')
+local select = require('arti.ws.dialogs.select')
+local table_d = require('arti.ws.dialogs.table')
 
 local M = {}
 

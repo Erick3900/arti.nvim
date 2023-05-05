@@ -1,9 +1,9 @@
-local project = require('arti.project')
-local utils     = require('arti.utils')
+local ws    = require('arti.ws')
+local utils = require('arti.utils')
 
-local arti = {
+local arti  = {
     storage = utils.storage_path,
-    project = project
+    ws = ws
 }
 
 function arti.setup(config)
