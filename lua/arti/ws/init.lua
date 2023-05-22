@@ -631,8 +631,6 @@ function arti_ws.setup(config)
                     end
                 end
 
-                print("::" .. table.concat(args, "_") .. "::" .. tostring(#args))
-
                 local action = args[1]
                 table.remove(args, 1)
 

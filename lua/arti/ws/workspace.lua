@@ -4,7 +4,7 @@ local runner     = require('arti.ws.runner')
 local dialogs    = require('arti.ws.dialogs')
 local previewers = require('telescope.previewers')
 
-function show_entries(config, ws, entries, options, callback)
+local function show_entries(config, ws, entries, options, callback)
     dialogs.table(
         entries,
         {
@@ -418,7 +418,7 @@ return function(config, rootpath)
                         print("Task "..entry.name.." failed")
                     end
 
-                    if vim.is_callabl(entry.on_exit) then
+                    if vim.is_callable(entry.on_exit) then
                         entry.on_exit(code)
                     end
                 end)

@@ -185,11 +185,11 @@ function runner._run(config, ws, cmds, entry, on_exit, idx)
     local ok, err = pcall(start_job)
 
     if not ok then
-        error(err)
-
         if vim.is_callable(on_exit) then
             on_exit(-1)
         end
+
+        error(err)
     end
 end
 
@@ -213,7 +213,33 @@ function runner._run_lua(config, ws, task, on_exit)
         return
     end
 
-    -- TODO
+    local ok, ret = pcall(run_callable, function(lTask, onExit)
+        runner.run(config, ws, lTask, function(code)
+            if code ~= 0 then
+                error("Tasks "..task.name.." throwed")
+            else
+                onExit()
+            end
+        end)
+    end)
+
+    if not ok then
+        on_exit(-1)
+        error(ret)
+    end
+
+    if type(ret) == "string" then
+        local tasks = ws:get_tasks_by_name()
+
+        if type(tasks[ret]) == "table" then
+            runner.run(config, ws, tasks[ret], on_exit)
+        else
+            on_exit(-1)
+            error("Task "..ret.." invalid")
+        end
+    else
+        on_exit(0)
+    end
 end
 
 function runner._parse_command(os_cmd)
